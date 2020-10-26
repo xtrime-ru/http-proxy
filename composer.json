@@ -1,0 +1,25 @@
+{
+    "name": "xtrime-ru/amproxy",
+    "description": "Http proxy server built with amphp async framework.",
+    "license": "MIT",
+    "type": "package",
+    "authors": [
+        {
+            "name": "Alexander Pankratov",
+            "email": "alexander@i-c-a.su"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "amphp/socket": "^1",
+        "league/uri": "^6",
+        "ext-pcntl": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Amproxy\\": "src/"
+        }
+    }
+}
