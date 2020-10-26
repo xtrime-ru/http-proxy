@@ -1,8 +1,7 @@
 {
-    "name": "xtrime-ru/amproxy",
+    "name": "xtrime-ru/http-proxy",
     "description": "Http proxy server built with amphp async framework.",
     "license": "MIT",
-    "type": "package",
     "authors": [
         {
             "name": "Alexander Pankratov",
@@ -17,7 +16,7 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "Amproxy\\": "src/"
+            "HttpProxy\\": "src/"
         }
     }
 }

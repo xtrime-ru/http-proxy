@@ -1,6 +1,6 @@
 <?php
 
-namespace Amproxy;
+namespace HttpProxy;
 
 use Amp;
 use Amp\Socket;

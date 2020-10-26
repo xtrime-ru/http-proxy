@@ -41,4 +41,4 @@ Options:
 
 require_once __DIR__ . '/bootstrap.php';
 
-\Amproxy\ProxyServer::start($options['host'], $options['port'], $options['proxy']);
+\HttpProxy\ProxyServer::start($options['host'], $options['port'], $options['proxy']);
