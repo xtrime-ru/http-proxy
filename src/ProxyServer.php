@@ -20,7 +20,7 @@ final class ProxyServer
                 print "Listening on http://" . $server->getAddress() . " ..." . PHP_EOL;
 
                 while ($socket = yield $server->accept()) {
-                    call(fn()=>yield from self::handleClient($socket));
+                    call(static fn()=>yield from self::handleClient($socket));
                 }
 
                 self::registerShutdown($server);
@@ -53,13 +53,13 @@ final class ProxyServer
             /** @var Socket\Socket $remoteTunnel */
             $remoteTunnel = yield from self::openRemoteTunnel($socket);
 
-            $promises[] = call(function() use($socket, $remoteTunnel) {
+            $promises[] = call(static function() use($socket, $remoteTunnel) {
                 while (null !== $data = yield $socket->read()) {
                     $remoteTunnel->write($data);
                 }
             });
 
-            $promises[] = call(function() use($socket, $remoteTunnel) {
+            $promises[] = call(static function() use($socket, $remoteTunnel) {
                 while (null !== $data = yield $remoteTunnel->read()) {
                     $socket->write($data);
                 }
