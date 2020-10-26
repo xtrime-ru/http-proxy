@@ -1,4 +1,4 @@
-# Amproxy
+# Http-Proxy
 Http proxy server built with async amphp framework.
 
 # Features
