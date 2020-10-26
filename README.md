@@ -4,6 +4,7 @@ Http proxy server built with async amphp framework.
 # Features
 - Http proxy server
 - Fast and async
+- Additional upstream proxy support 
 
 # Requirements
 - php 7.4
@@ -11,8 +12,8 @@ Http proxy server built with async amphp framework.
 - cli / shell
 
 # Setup
-- `composer create-project xtrime-ru/amproxy amproxy`
-- `cd amproxy`
+- `composer create-project xtrime-ru/http-proxy http-proxy`
+- `cd http-proxy`
 - listen connections:
     - local: `php proxy.php --host=127.0.0.1 --port=9600`
     - all: `php proxy.php --host=0.0.0.0 --port=9600`
