@@ -9,42 +9,23 @@ use function Amp\call;
 final class ProxyServer
 {
 
-    private static ?string $externalProxy = null;
+    public static ?string $externalProxy = null;
+    public static ?string $proxyConnectRequest = null;
 
     public static function start(string $host, int $port, ?string $proxy = null): void
     {
         static::$externalProxy = $proxy;
-        Amp\Loop::run(
+        Amp\Loop::defer(
             function() use ($host, $port) {
                 $server = Amp\Socket\Server::listen("tcp://{$host}:{$port}");
                 print "Listening on http://" . $server->getAddress() . " ..." . PHP_EOL;
 
+                /** @var Socket\ResourceSocket $socket */
                 while ($socket = yield $server->accept()) {
                     call(static fn()=>yield from self::handleClient($socket));
                 }
-
-                self::registerShutdown($server);
             }
         );
-    }
-
-    /**
-     * Stop the server gracefully when SIGINT is received.
-     * This is technically optional, but it is best to call Server::stop().
-     *
-     * @param Socket\Server $server
-     *
-     * @throws Amp\Loop\UnsupportedFeatureException
-     */
-    private static function registerShutdown(Socket\Server $server)
-    {
-        if (defined('SIGINT')) {
-            Amp\Loop::onSignal(SIGINT, static function (string $watcherId) use ($server) {
-                Amp\Loop::cancel($watcherId);
-                $server->close();
-                exit;
-            });
-        }
     }
 
     private static function handleClient(Socket\Socket $socket): \Generator
@@ -85,14 +66,20 @@ final class ProxyServer
         $request = yield $socket->read();
 
         if (preg_match('/^CONNECT ([^\s]+)/u', $request, $matches)) {
-            if (static::$externalProxy) {
-                /** @var Socket\Socket $remoteSocket */
-                $remoteSocket = yield Socket\connect(static::$externalProxy);
-                $remoteSocket->write($request);
-                yield $socket->write(yield $remoteSocket->read());
+            static::$proxyConnectRequest = $request;
+            if (MitmServer::isEnabled()) {
+                $remoteSocket = yield Socket\connect(MitmServer::getUri());
+                $socket->write("HTTP/1.1 200 OK\r\n\r\n");
             } else {
-                $remoteSocket = yield Socket\connect($matches[1]);
-                yield $socket->write("HTTP/1.1 200 OK\r\n\r\n");
+                if (static::$externalProxy) {
+                    /** @var Socket\Socket $remoteSocket */
+                    $remoteSocket = yield Socket\connect(static::$externalProxy);
+                    $remoteSocket->write(static::$proxyConnectRequest);
+                    yield $socket->write(yield $remoteSocket->read());
+                } else {
+                    $remoteSocket = yield Socket\connect($matches[1]);
+                    $socket->write("HTTP/1.1 200 OK\r\n\r\n");
+                }
             }
         } elseif (preg_match('~Host: ([^\s]+)~u', $request, $matches)) {
             $host = $matches[1];
@@ -101,17 +88,17 @@ final class ProxyServer
             preg_match_all('/Proxy-.+\r\n/', $request, $matches);
             $proxyHeaders = implode('',$matches[0]);
             $request = preg_replace('/Proxy-.+\r\n/', '', $request);
-
+            static::$proxyConnectRequest = "CONNECT $host:$port HTTP/1.1\r\n{$proxyHeaders}\r\n";
             if (static::$externalProxy) {
                 /** @var Socket\Socket $remoteSocket */
                 $remoteSocket = yield Socket\connect(static::$externalProxy);
-                $remoteSocket->write("CONNECT $host:$port HTTP/1.1\r\n{$proxyHeaders}\r\n");
+                $remoteSocket->write(static::$proxyConnectRequest);
                 yield $remoteSocket->read();
             } else {
                 $remoteSocket = yield Socket\connect("$host:$port");
             }
 
-            yield $remoteSocket->write($request);
+            $remoteSocket->write($request);
         } else {
             throw new \UnexpectedValueException("Unknown request format: $request");
         }
