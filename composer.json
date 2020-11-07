@@ -10,9 +10,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "amphp/socket": "^1",
-        "amphp/http-server": "^2",
-        "amphp/log": "^1"
+        "amphp/socket": "^1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
